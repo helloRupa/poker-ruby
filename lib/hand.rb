@@ -17,30 +17,28 @@ class Hand
   end
 
   def self.high_card(cards)
-    ranks = cards.map { |card| rank_card(cards, card) }.sort!
+    ranks = sort_by_rank(cards)
     ranks[-1]
   end
 
   def self.pair?(cards)
-    cards.any? { |card| rank_match_count(cards, card) == 2 }
+    of_a_kind?(cards, 2)
   end
 
   def self.three_of_a_kind?(cards)
-    cards[0..2].any? { |card| rank_match_count(cards, card) == 3 }
+    of_a_kind?(cards, 3)
   end
 
   def self.four_of_a_kind?(cards)
-    ranks = cards.map { |card| rank(card) }
-    ranks.to_set.length == 2
+    of_a_kind?(cards, 4)
   end
 
   def self.flush?(cards)
-    suits = cards.map { |card| suit(card) }
-    suits.to_set.length == 1
+    cards.all? { |card| suit(cards[0]) == suit(card) }
   end
 
   def self.straight?(cards)
-    ranks = cards.map { |card| rank_card(cards, card, true) }.sort!
+    ranks = sort_by_rank(cards, true)
     prev_rank = ranks[0]
     ranks.each_with_index do |rank, idx|
       next if idx == 0
@@ -48,6 +46,14 @@ class Hand
       prev_rank = rank
     end
     true
+  end
+
+  def self.sort_by_rank(cards, straight_check = false)
+    cards.map { |card| rank_card(cards, card, straight_check) }.sort
+  end
+
+  def self.of_a_kind?(cards, num)
+    cards.any? { |card| rank_match_count(cards, card) == num }
   end
 
   def self.rank(card)
