@@ -72,7 +72,7 @@ class Player
     choices.delete!(' ')
     return 'none' if choices.downcase == 'none'
     choice_arr = choices.split(',')
-    unless choice_arr.all? { |choice| choice.between?('0', '4') } && choice_arr.length == 3
+    unless choice_arr.all? { |choice| choice.between?('0', '4') } && choice_arr.length <= 3
       raise ArgumentError
     end
     choice_arr.map(&:to_i)
