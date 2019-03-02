@@ -52,28 +52,24 @@ describe 'Player' do
       p1.replace_cards([0, 1, 3], %w[10S JC 8D])
       expect(p1.cards).to eq(%w[KH JC 10S JC 8D])
     end
-
-    it 'raises an ArgumentError if you add too many cards' do
-      expect { p1.replace_cards([0], %w[10S 8D]) }.to raise_error(ArgumentError)
-    end
   end
 
   describe '#input_call' do
-    it 'allows a player to call' do
-      allow(p1).to receive(:call_choice) { 'call' }
+    it 'returns the player input' do
+      allow(p1).to receive(:gets).and_return('call')
       expect(p1.input_call).to eq('call')
     end
   end
 
   describe '#input_raise' do
-    it 'allows a player to call' do
+    it 'returns the player input' do
       allow(p1).to receive(:raise_answer) { 20 }
       expect(p1.input_raise).to eq(20)
     end
   end
 
   describe '#input_cards_discard' do
-    it 'allows a player to call' do
+    it 'returns the input' do
       allow(p1).to receive(:replace_choice) { [0, 2] }
       expect(p1.input_cards_discard).to eq([0, 2])
     end
