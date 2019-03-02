@@ -4,6 +4,7 @@
 #     Whether they wish to fold, see, or raise.
 
 class Player
+  CARD_NUM = 5
   attr_reader :name, :cards, :purse
   attr_accessor :last_payment
 
@@ -15,6 +16,7 @@ class Player
   end
 
   def bank(amount)
+    raise(ArgumentError, 'not enough money') if @purse + amount < 0
     @purse += amount
   end
 
@@ -82,7 +84,8 @@ class Player
     @cards = cards_left
   end
 
-  def add_cards(cards)
-    @cards += cards
+  def add_cards(new_cards)
+    raise ArgumentError unless @cards.length + new_cards.length == CARD_NUM
+    @cards += new_cards
   end
 end
