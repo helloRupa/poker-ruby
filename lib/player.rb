@@ -15,7 +15,7 @@ class Player
   end
 
   def input_cards_discard
-    puts 'Which cards would you like to replace (max. 3)? (e.g. 0, 2, 4)'
+    puts "#{@name}, which cards would you like to replace (max. 3)? (e.g. 0, 2, 4)"
     puts 'Or type none if you wish to keep all of your cards:'
     print '> '
     replace_choice
@@ -30,7 +30,7 @@ class Player
   end
 
   def input_call
-    puts 'Would you like to fold, see, or raise?'
+    puts "#{@name}, would you like to fold, see, or raise?"
     print '> '
     gets.chomp.downcase
   end
@@ -48,8 +48,8 @@ class Player
 
   def raise_answer
     answer = gets.chomp
-    raise(ArgumentError, 'Please input numbers only.') if answer.match(/^\d+$/).nil?
-    answer.to_i
+    raise(ArgumentError, 'Please input whole numbers only.') if answer.match(/^\d+$/).nil?
+    answer.to_i.abs
   end
 
   def replace_choice
