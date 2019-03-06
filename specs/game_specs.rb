@@ -102,7 +102,7 @@ describe 'Game' do
       end
     end
 
-    context 'when only first player raises' do
+    context 'when player raises' do
       before(:each) do
         allow(p1).to receive(:input_call) { 'raise' }
         allow(p1).to receive(:input_raise) { 10 }
