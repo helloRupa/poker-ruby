@@ -16,6 +16,28 @@ class Game
     @folded_players = []
     @current_bet = STARTING_BET
     @last_to_raise = nil
+    @winners = []
+  end
+
+  def run
+    welcome_msg
+    loop do
+      round
+      reveal_round
+      display_winners
+      award_pot
+      reset_run
+      break unless funded? && play_again?
+    end
+    puts 'Not enough players have money to play again!' unless funded?
+    puts 'Goodbye!'
+  end
+
+  def round
+    bet_round
+    return if one_player?
+    replace_round
+    bet_round
   end
 
   def bet_round
@@ -23,13 +45,99 @@ class Game
     until @last_to_raise.nil? && !first_round
       place_bets(first_round)
       first_round = false
-      # break if @last_to_raise.nil?
     end
     show_pot
+    puts
     reset_bet_data
   end
 
+  def replace_round
+    @players.each do |player|
+      next if folded?(player)
+      show_cards(player)
+      player_choice(player)
+    end
+  end
+
+  def reveal_round
+    @players.each do |player|
+      next if folded?(player)
+      show_cards(player)
+    end
+  end
+
   private
+
+  def welcome_msg
+    puts 'Welcome to Poker.'
+    puts 'You can replace up to 3 of your cards in a round of play. Just select their indexes.'
+    sleep(2)
+  end
+
+  def game_min
+    STARTING_BET * 2
+  end
+
+  def reset_run
+    @folded_players = []
+    @deck = Deck.new
+    @players.each do |player|
+      next if player.purse < game_min
+      player.replace_cards([0, 1, 2, 3, 4], @deck.deal(CARD_NUM))
+    end
+  end
+
+  def funded?
+    @players.select { |player| player.purse >= game_min }.length > 1
+  end
+
+  def play_again?
+    puts
+    puts 'Would you like to play again? (Y/N):'
+    print '> '
+    answer = gets.chomp.downcase
+    puts
+    %w[y yes yeah ok yea yah ya].include?(answer)
+  end
+
+  def award_pot
+    amount = @pot / @winners.length
+    @winners.each { |winner| winner.bank(amount) }
+    @pot = 0
+  end
+
+  def display_winners
+    win_data = Hand.winning_hand(unfolded_players)
+    puts "Winning Hand: #{win_data[:hand]}"
+    puts "Winner(s): #{win_data[:winners].map(&:name).join(', ')}"
+    @winners = win_data[:winners]
+  end
+
+  def unfolded_players
+    @players.reject { |player| folded?(player) }
+  end
+
+  def show_cards(player)
+    puts "#{player.name}: #{player.cards.join(' ')}"
+  end
+
+  def folded?(player)
+    @folded_players.include?(player)
+  end
+
+  def player_choice(player)
+    choice = player.input_cards_discard
+    return if choice == 'none'
+    raise(ArgumentError, 'Choose 3 cards maximum!') unless choice.is_a?(Array) && 
+                                                      choice.length <= REPLACE_MAX
+    player.replace_cards(choice, @deck.deal(choice.length))
+    show_cards(player)
+    puts
+  rescue ArgumentError => err
+    puts err
+    puts
+    retry
+  end
 
   def show_pot
     puts
@@ -41,8 +149,9 @@ class Game
       last_to_raise_check(player)
       break if (@last_to_raise.nil? && !first_round) || one_player?
       display_bet_data(player)
-      fold(player) if amount_owed(player) > player.purse
-      next if @folded_players.include?(player)
+      fold(player) if [amount_owed(player), @current_bet].any? { |amount| amount > player.purse }
+      next if folded?(player)
+      show_cards(player)
       bet_turn(player)
     end
   end
@@ -56,7 +165,7 @@ class Game
     player.bank(-amount)
     @pot += amount
     player.last_payment += amount
-    p "#{player.name}: last = #{player.last_payment}, amount = #{amount}"
+    # p "#{player.name}: last = #{player.last_payment}, amount = #{amount}"
   end
 
   def fold(player)
@@ -135,5 +244,6 @@ if $PROGRAM_NAME == __FILE__
   end
   # game = Game.new([['aaa', 500], ['bbb', 500], ['ccc', 500]])
   game = Game.new([['aaa', 500], ['bbb', 500]])
-  game.bet_round
+  # game.bet_round
+  game.run
 end
