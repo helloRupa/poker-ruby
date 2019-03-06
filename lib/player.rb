@@ -58,7 +58,7 @@ class Player
     return 'none' if choices.downcase == 'none'
     choice_arr = choices.split(',')
     unless choice_arr.all? { |choice| choice.between?('0', '4') }
-      raise(ArgumentError, 'Numbers 0 - 4 only, 3 choices max, or none')
+      raise(ArgumentError, 'Numbers 0 - 4 only or type none to keep all cards.')
     end
     choice_arr.map(&:to_i)
   end
