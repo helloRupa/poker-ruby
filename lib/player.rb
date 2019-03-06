@@ -55,6 +55,7 @@ class Player
   def replace_choice
     choices = gets.chomp
     choices.delete!(' ')
+    puts
     return 'none' if choices.downcase == 'none'
     choice_arr = choices.split(',')
     unless choice_arr.all? { |choice| choice.between?('0', '4') }
