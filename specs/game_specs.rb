@@ -8,9 +8,9 @@ end
 
 describe 'Game' do
   subject(:game) { Game.new([['aaron', 500], ['baz', 500], ['cowbeans', 500]]) }
-  let(:p1) { double('Player', name: 'p1', purse: 500, last_payment: 0) }
-  let(:p2) { double('Player', name: 'p2', purse: 500, last_payment: 0) }
-  let(:p3) { double('Player', name: 'p3', purse: 500, last_payment: 0) }
+  let(:p1) { double('Player', name: 'p1', purse: 500, last_payment: 0, cards: %w[as ah ac ad 2s]) }
+  let(:p2) { double('Player', name: 'p2', purse: 500, last_payment: 0, cards: %w[9s ah ac ad 2s]) }
+  let(:p3) { double('Player', name: 'p3', purse: 500, last_payment: 0, cards: %w[7s ah ac ad 2s]) }
 
   describe '#initialize' do
     it 'creates a deck of cards' do
@@ -128,6 +128,66 @@ describe 'Game' do
         game.bet_round
         expect(game.pot).to eq(100)
       end
+    end
+  end
+
+  describe '#replace_round' do
+    before(:each) do
+      game.players = [p1]
+    end
+
+    it 'calls input_cards_discard on player' do
+      allow(p1).to receive(:input_cards_discard) { 'none' }
+      expect(p1).to receive(:input_cards_discard)
+      game.replace_round
+    end
+
+    it 'does not replace any cards when the player chooses none' do
+      allow(p1).to receive(:input_cards_discard) { 'none' }
+      expect(p1).to_not receive(:replace_cards)
+      game.replace_round
+    end
+
+    it 'replaces the selected cards' do
+      final_cards = p1.cards
+      allow(p1).to receive(:input_cards_discard) { [0, 1, 2] }
+      expect(p1).to receive(:replace_cards).with([0, 1, 2], instance_of(Array)) do |choices, cards|
+        final_cards = p1.cards[3..-1].concat(choices)
+      end
+      game.replace_round
+      expect(final_cards).to_not eq(p1.cards)
+    end
+  end
+
+  describe '#run' do
+    def empty_hand
+      Array.new(5).map { |_card| double('card', value: nil) }
+    end
+
+    def make_hand(hand, card_values)
+      hand.each_with_index { |card, idx| allow(card).to receive(:value) { card_values[idx] } }
+    end
+
+    def fill_hands(players, hands_arr)
+      players.each_with_index do |player, idx|
+        allow(player).to receive(:cards) { make_hand(empty_hand, hands_arr[idx]) }
+      end
+    end
+
+    it 'awards the pot to the winner' do
+      hand1 = [%w[2 D], %w[3 D], %w[4 D], %w[5 D], %w[6 D]]
+      hand2 = [%w[3 D], %w[5 S], %w[7 S], %w[6 S], %w[4 S]]
+      game.players = [p1, p2, p3]
+      game.players.each do |p|
+        allow(p).to receive(:bank)
+        allow(p).to receive(:last_payment=)
+        allow(p).to receive(:input_call) { 'see' }
+        allow(p).to receive(:input_cards_discard) { 'none' }
+        allow(p).to receive(:replace_cards)
+      end
+      fill_hands(game.players, [hand1, hand2, hand2])
+      expect(p1).to receive(:bank).with(60)
+      game.run
     end
   end
 end
