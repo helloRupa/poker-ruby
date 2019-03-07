@@ -173,8 +173,7 @@ describe 'Game' do
         allow(player).to receive(:cards) { make_hand(empty_hand, hands_arr[idx]) }
       end
     end
-
-    it 'awards the pot to the winner' do
+    before(:each) do
       hand1 = [%w[2 D], %w[3 D], %w[4 D], %w[5 D], %w[6 D]]
       hand2 = [%w[3 D], %w[5 S], %w[7 S], %w[6 S], %w[4 S]]
       game.players = [p1, p2, p3]
@@ -186,7 +185,17 @@ describe 'Game' do
         allow(p).to receive(:replace_cards)
       end
       fill_hands(game.players, [hand1, hand2, hand2])
+    end
+
+    it 'awards the pot to the winner' do
       expect(p1).to receive(:bank).with(60)
+      game.run
+    end
+
+    it 'deals new cards at the end of the round' do
+      game.players.each do |p|
+        expect(p).to receive(:replace_cards).with([0, 1, 2, 3, 4], instance_of(Array))
+      end
       game.run
     end
   end
