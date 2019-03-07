@@ -149,11 +149,16 @@ class Game
       last_to_raise_check(player)
       break if (@last_to_raise.nil? && !first_round) || one_player?
       display_bet_data(player)
-      fold(player) if [amount_owed(player), @current_bet].any? { |amount| amount > player.purse }
+      handle_fold(player)
       next if folded?(player)
       show_cards(player)
       bet_turn(player)
     end
+  end
+
+  def handle_fold(player)
+    return if folded?(player)
+    fold(player) if [amount_owed(player), @current_bet].any? { |amount| amount > player.purse }
   end
 
   def amount_owed(player)
@@ -165,7 +170,6 @@ class Game
     player.bank(-amount)
     @pot += amount
     player.last_payment += amount
-    # p "#{player.name}: last = #{player.last_payment}, amount = #{amount}"
   end
 
   def fold(player)
@@ -242,8 +246,8 @@ if $PROGRAM_NAME == __FILE__
   class Game
     attr_reader :pot
   end
-  # game = Game.new([['aaa', 500], ['bbb', 500], ['ccc', 500]])
-  game = Game.new([['aaa', 500], ['bbb', 500]])
+  game = Game.new([['aaa', 500], ['bbb', 500], ['ccc', 500]])
+  # game = Game.new([['aaa', 500], ['bbb', 500]])
   # game.bet_round
   game.run
 end
